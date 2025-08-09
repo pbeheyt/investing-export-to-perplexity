@@ -6,7 +6,8 @@
   "permissions": [
     "scripting",
     "tabs",
-    "storage"
+    "storage",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "*://*.investing.com/*",

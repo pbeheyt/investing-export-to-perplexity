@@ -85,7 +85,7 @@ class BasePlatform {
    * @protected
    */
   async _insertTextIntoContentEditable(editorElement, text) {
-    console.log(`[${this.platformId}] Starting robust text insertion for: "${text}"`);
+    console.log(`[${this.platformId}] Starting clipboard-based text insertion for: "${text}"`);
     
     // 1. Focus the element. This is critical.
     editorElement.focus();
@@ -97,14 +97,27 @@ class BasePlatform {
     sel.removeAllRanges();
     sel.addRange(range);
 
-    // 3. Use `document.execCommand` to insert text. This is much more reliable
-    // for triggering the website's framework (e.g., React) to update its state.
-    console.log(`[${this.platformId}] Using execCommand to insert text.`);
-    document.execCommand('insertText', false, text);
+    try {
+      // 3. Use the Clipboard API to write text. This requires "clipboardWrite" permission.
+      await navigator.clipboard.writeText(text);
+      console.log(`[${this.platformId}] Successfully copied text to clipboard.`);
 
-    // 4. Dispatch events just in case. Sometimes frameworks need an extra push.
+      // 4. Execute a "paste" command. This is highly reliable for modern frameworks.
+      const pasted = document.execCommand('paste');
+      if (!pasted) {
+        throw new Error('document.execCommand("paste") returned false.');
+      }
+      console.log(`[${this.platformId}] "paste" command executed successfully.`);
+
+    } catch (err) {
+      console.error(`[${this.platformId}] Clipboard paste failed. Error:`, err);
+      // Fallback to the older method just in case clipboard access fails.
+      console.log(`[${this.platformId}] Falling back to insertText execCommand.`);
+      document.execCommand('insertText', false, text);
+    }
+
+    // 5. Dispatch events to ensure the framework's state updates.
     this._dispatchEvents(editorElement, ['input', 'change', 'keyup']);
-
     console.log(`[${this.platformId}] Text insertion process complete.`);
   }
 
