@@ -44,7 +44,7 @@ function addButton() {
   // Add click listener to send data to the background script
   button.addEventListener('click', () => {
     // Get the company name, removing the ticker symbol in parentheses if it exists
-    const companyName = header.textContent.split('(').trim();
+    const companyName = header.textContent.split('(')[0].trim();
     if (companyName) {
       console.log(`[Perplexity Exporter] Exporting company: ${companyName}`);
       chrome.runtime.sendMessage({
