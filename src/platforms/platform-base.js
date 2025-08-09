@@ -66,30 +66,49 @@ class BasePlatform {
   }
 
   /**
-   * Inserts text into a contenteditable div, mimicking user input.
+   * Inserts text into a contenteditable div, mimicking user input reliably for modern frameworks.
    * @param {HTMLElement} editorElement - The contenteditable editor.
    * @param {string} text - The text to insert.
    */
   async _insertTextIntoContentEditable(editorElement, text) {
-    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Starting insertion for text: "${text}"`);
-    console.log(`[${this.platformId}] _insertTextIntoContentEditable: The editor element is:`);
-    console.dir(editorElement);
-
-    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Focusing editor...`);
+    console.log(`[${this.platformId}] Starting robust text insertion for: "${text}"`);
     editorElement.focus();
 
-    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Clearing existing content...`);
-    editorElement.innerHTML = ''; 
+    // Clear existing content
+    editorElement.innerHTML = '';
 
-    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Executing 'insertText' command...`);
-    const commandSuccessful = document.execCommand('insertText', false, text);
-    console.log(`[${this.platformId}] _insertTextIntoContentEditable: 'insertText' command success: ${commandSuccessful}`);
-    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Editor innerHTML after command: "${editorElement.innerHTML}"`);
+    // Insert text line by line, creating <p> tags, which is common for these editors.
+    // This mimics how the site's own framework builds the content.
+    const lines = text.split('\n');
+    lines.forEach((line) => {
+      const p = document.createElement('p');
+      if (line === '') {
+        // For empty lines, editors often use <br> inside the paragraph
+        p.appendChild(document.createElement('br'));
+      } else {
+        p.textContent = line;
+      }
+      editorElement.appendChild(p);
+    });
 
-    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Dispatching events ['input', 'change', 'blur', 'focus']...`);
-    this._dispatchEvents(editorElement, ['input', 'change', 'blur', 'focus']);
-    
-    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Text insertion process finished.`);
+    // Move the user's selection/cursor to the end of the newly inserted content.
+    // This is a crucial step for the framework to recognize the new state.
+    const range = document.createRange();
+    const sel = window.getSelection();
+    if (editorElement.lastChild) {
+      range.setStartAfter(editorElement.lastChild);
+    } else {
+      range.setStart(editorElement, 0);
+    }
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    // Dispatch the 'input' and 'change' events. The site's framework (React)
+    // listens for these to update its internal state, which prevents it from
+    // overwriting our changes.
+    this._dispatchEvents(editorElement, ['input', 'change']);
+    console.log(`[${this.platformId}] Text insertion process complete.`);
   }
 
   /**
