@@ -39,8 +39,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Add the listener before creating the tab to catch the update event.
     chrome.tabs.onUpdated.addListener(tabUpdateListener);
 
-    // Create a new tab with the Perplexity URL. The listener above will handle the rest.
-    chrome.tabs.create({ url: PERPLEXITY_URL });
+    // Save the company name to local storage for the content script to pick up.
+    chrome.storage.local.set({ companyToExport: companyName }, () => {
+      console.log(`[Perplexity Exporter] Background: Saved "${companyName}" to storage.`);
+      // Create a new tab with the Perplexity URL. The listener above will handle the rest.
+      chrome.tabs.create({ url: PERPLEXITY_URL });
+    });
     
     return true; // Required for async operations.
   }

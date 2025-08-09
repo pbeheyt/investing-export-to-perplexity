@@ -110,15 +110,51 @@ class BasePlatform {
     // 2. Insert the text
     await this._insertTextIntoContentEditable(editor, companyName);
 
-    // 3. Find and click the submit button
-    const submitButton = await this._waitForElementState(this._getSubmitButtonSelectors(), this._isButtonReady, 5000);
+    // 3. Find the submit button, even if it's initially disabled
+    const submitButton = await this._waitForElementState(this._getSubmitButtonSelectors(), (el) => !!el, 5000);
     if (!submitButton) {
-      console.error(`[${this.platformId}] Could not find an enabled submit button. Aborting.`);
+      console.error(`[${this.platformId}] Could not find the submit button element. Aborting.`);
       return;
     }
-    console.log(`[${this.platformId}] Submit button found and is ready.`);
+    console.log(`[${this.platformId}] Submit button found. Waiting for it to become enabled.`);
 
-    await this._clickSubmitButton(submitButton);
+    // 4. Wait for the button to be enabled using a MutationObserver
+    const enabledButton = await new Promise((resolve) => {
+      // If button is already ready, resolve immediately.
+      if (this._isButtonReady(submitButton)) {
+        console.log(`[${this.platformId}] Submit button was already enabled.`);
+        resolve(submitButton);
+        return;
+      }
+
+      const observer = new MutationObserver((mutationsList, obs) => {
+        if (this._isButtonReady(submitButton)) {
+          console.log(`[${this.platformId}] Submit button is now enabled via MutationObserver.`);
+          obs.disconnect();
+          resolve(submitButton);
+        }
+      });
+
+      observer.observe(submitButton, { attributes: true, attributeFilter: ['disabled', 'class', 'aria-disabled'] });
+
+      // Failsafe timeout
+      const waitTimeout = setTimeout(() => {
+        observer.disconnect();
+        // Final check before giving up
+        if (this._isButtonReady(submitButton)) {
+          resolve(submitButton);
+        } else {
+          resolve(null);
+        }
+      }, 5000);
+    });
+
+    if (!enabledButton) {
+      console.error(`[${this.platformId}] Timeout: Submit button did not become enabled. Aborting.`);
+      return;
+    }
+
+    await this._clickSubmitButton(enabledButton);
     console.log(`[${this.platformId}] Automation process complete.`);
   }
 }
