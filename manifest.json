@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Investing.com to Perplexity Exporter",
+  "version": "1.0",
+  "description": "Adds a button to Investing.com equity pages to export company info to a Perplexity AI Space.",
+  "permissions": [
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "*://*.investing.com/*",
+    "*://*.perplexity.ai/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.investing.com/equities/*"],
+      "js": ["src/content.js"]
+    }
+  ],
+  "action": {
+    "default_title": "Investing.com to Perplexity"
+  }
+}
