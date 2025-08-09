@@ -79,40 +79,32 @@ class BasePlatform {
   }
 
   /**
-   * Inserts text into a contenteditable div, mimicking user input reliably.
+   * Inserts text into a contenteditable div using a more robust method that better simulates user input.
    * @param {HTMLElement} editorElement - The contenteditable editor.
    * @param {string} text - The text to insert.
    * @protected
    */
-  // async _insertTextIntoContentEditable(editorElement, text) {
   async _insertTextIntoContentEditable(editorElement, text) {
     console.log(`[${this.platformId}] Starting robust text insertion for: "${text}"`);
+    
+    // 1. Focus the element. This is critical.
     editorElement.focus();
-    editorElement.innerHTML = ''; // Clear existing content
-
-    const lines = text.split('\n');
-    lines.forEach((line) => {
-      const p = document.createElement('p');
-      if (line === '') {
-        p.appendChild(document.createElement('br'));
-      } else {
-        p.textContent = line;
-      }
-      editorElement.appendChild(p);
-    });
-
+    
+    // 2. Select all existing content in the editor to ensure it's replaced.
     const range = document.createRange();
+    range.selectNodeContents(editorElement);
     const sel = window.getSelection();
-    if (editorElement.lastChild) {
-      range.setStartAfter(editorElement.lastChild);
-    } else {
-      range.setStart(editorElement, 0);
-    }
-    range.collapse(true);
     sel.removeAllRanges();
     sel.addRange(range);
 
-    this._dispatchEvents(editorElement, ['input', 'change']);
+    // 3. Use `document.execCommand` to insert text. This is much more reliable
+    // for triggering the website's framework (e.g., React) to update its state.
+    console.log(`[${this.platformId}] Using execCommand to insert text.`);
+    document.execCommand('insertText', false, text);
+
+    // 4. Dispatch events just in case. Sometimes frameworks need an extra push.
+    this._dispatchEvents(editorElement, ['input', 'change', 'keyup']);
+
     console.log(`[${this.platformId}] Text insertion process complete.`);
   }
 
