@@ -65,4 +65,65 @@ class PerplexityPlatform extends BasePlatform {
     }
     return false;
   }
+
+  /**
+   * Provides CSS selectors for finding the "Research" mode button.
+   * @returns {string[]}
+   */
+  _getResearchModeButtonSelector() {
+    return ['button[value="research"]'];
+  }
+
+  /**
+   * Overridden automation process to include selecting "Research" mode.
+   * @param {string} companyName - The data to be entered.
+   */
+  async processAutomation(companyName) {
+    console.log(`[${this.platformId}] Starting automation for: ${companyName}`);
+
+    // 1. Find the editor
+    const editorResult = await this._waitForElementState(this._getEditorSelectors(), (el) => this._isVisibleElement(el), 10000);
+    if (editorResult.status !== 'found') {
+      console.error(`[${this.platformId}] Could not find the editor element. Aborting.`);
+      return;
+    }
+    const editor = editorResult.element;
+    console.log(`[${this.platformId}] Editor found.`);
+
+    // 2. Insert the text
+    await this._insertTextIntoEditor(editor, companyName);
+
+    // 3. Find and select the "Research" mode button
+    const researchButtonResult = await this._waitForElementState(this._getResearchModeButtonSelector(), (el) => this._isVisibleElement(el), 5000);
+    if (researchButtonResult.status === 'found') {
+      const researchButton = researchButtonResult.element;
+      if (researchButton.getAttribute('data-state') === 'unchecked' || researchButton.getAttribute('aria-checked') === 'false') {
+        console.log(`[${this.platformId}] "Research" mode is not active. Clicking to enable.`);
+        await this._simulateRealClick(researchButton);
+        // Wait a brief moment for the UI to potentially update after the click
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } else {
+        console.log(`[${this.platformId}] "Research" mode is already active.`);
+      }
+    } else {
+      console.warn(`[${this.platformId}] Could not find the "Research" mode button. Continuing without it.`);
+    }
+
+    // 4. Find and wait for the submit button to become ready
+    const buttonResult = await this._waitForElementState(this._getSubmitButtonSelectors(), (el) => this._isButtonEnabled(el) && this._isVisibleElement(el), 5000);
+    if (buttonResult.status !== 'found') {
+      console.error(`[${this.platformId}] Submit button did not become enabled. Aborting.`);
+      return;
+    }
+    const submitButton = buttonResult.element;
+    console.log(`[${this.platformId}] Submit button is ready.`);
+
+    // 5. Click the button
+    await this._clickSubmitButton(submitButton);
+
+    // 6. Verify submission
+    await this._verifySubmission();
+    
+    console.log(`[${this.platformId}] Automation process complete.`);
+  }
 }
