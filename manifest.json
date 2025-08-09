@@ -5,7 +5,8 @@
   "description": "Adds a button to Investing.com equity pages to export company info to a Perplexity AI Space.",
   "permissions": [
     "scripting",
-    "tabs"
+    "tabs",
+    "storage"
   ],
   "host_permissions": [
     "*://*.investing.com/*",
@@ -16,8 +17,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.investing.com/equities/*"],
-      "js": ["src/content.js"]
+      "matches": [
+        "*://*.investing.com/equities/*"
+      ],
+      "js": [
+        "src/content.js"
+      ]
     }
   ],
   "action": {
