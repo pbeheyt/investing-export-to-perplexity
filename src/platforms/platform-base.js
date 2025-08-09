@@ -71,16 +71,25 @@ class BasePlatform {
    * @param {string} text - The text to insert.
    */
   async _insertTextIntoContentEditable(editorElement, text) {
+    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Starting insertion for text: "${text}"`);
+    console.log(`[${this.platformId}] _insertTextIntoContentEditable: The editor element is:`);
+    console.dir(editorElement);
+
+    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Focusing editor...`);
     editorElement.focus();
-    // Clear existing content if any
+
+    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Clearing existing content...`);
     editorElement.innerHTML = ''; 
 
-    // Using execCommand is often more reliable for triggering the app's internal state updates.
-    document.execCommand('insertText', false, text);
+    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Executing 'insertText' command...`);
+    const commandSuccessful = document.execCommand('insertText', false, text);
+    console.log(`[${this.platformId}] _insertTextIntoContentEditable: 'insertText' command success: ${commandSuccessful}`);
+    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Editor innerHTML after command: "${editorElement.innerHTML}"`);
 
-    // Dispatching events ensures frameworks like React detect the change.
+    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Dispatching events ['input', 'change', 'blur', 'focus']...`);
     this._dispatchEvents(editorElement, ['input', 'change', 'blur', 'focus']);
-    console.log(`[${this.platformId}] Text inserted and events dispatched.`);
+    
+    console.log(`[${this.platformId}] _insertTextIntoContentEditable: Text insertion process finished.`);
   }
 
   /**
