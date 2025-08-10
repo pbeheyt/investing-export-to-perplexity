@@ -3,6 +3,11 @@
   "name": "Investing.com to Perplexity Exporter",
   "version": "1.0",
   "description": "Adds a button to Investing.com equity pages to export company info to a Perplexity AI Space.",
+  "icons": {
+    "16": "icons/logo.png",
+    "48": "icons/logo.png",
+    "128": "icons/logo.png"
+  },
   "permissions": [
     "contextMenus",
     "scripting",
@@ -28,6 +33,10 @@
     }
   ],
   "action": {
+    "default_icon": {
+      "16": "icons/logo.png",
+      "48": "icons/logo.png"
+    },
     "default_title": "Investing.com to Perplexity"
   }
 }
