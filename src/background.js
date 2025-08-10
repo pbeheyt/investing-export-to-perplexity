@@ -5,6 +5,15 @@
  */
 const PERPLEXITY_URL = "https://www.perplexity.ai/spaces/company-qualitative-analysis-cJBemcwJS.Cd4qWmXz6lCQ";
 
+// Create context menu items on extension installation
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: "searchOnInvesting",
+    title: "Search on Investing.com for '%s'",
+    contexts: ["selection"]
+  });
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('[Perplexity Exporter] Background: Message received', message);
   if (message.action === 'exportToPerplexity') {
@@ -47,5 +56,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     
     return true; // Required for async operations.
+  }
+});
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "searchOnInvesting" && info.selectionText) {
+    const query = encodeURIComponent(info.selectionText);
+    const searchUrl = `https://www.investing.com/search/?q=${query}`;
+    
+    // Open the search result in a new tab
+    chrome.tabs.create({ url: searchUrl });
   }
 });

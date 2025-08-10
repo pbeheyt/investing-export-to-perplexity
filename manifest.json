@@ -4,6 +4,7 @@
   "version": "1.0",
   "description": "Adds a button to Investing.com equity pages to export company info to a Perplexity AI Space.",
   "permissions": [
+    "contextMenus",
     "scripting",
     "tabs",
     "storage",
