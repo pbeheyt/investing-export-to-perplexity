@@ -11,7 +11,7 @@
 
 ---
 
-### **Dossier de Recherche Qualitatif : [Nom de l'Entreprise] (Ticker : [Ticker])**
+### **Dossier de Recherche Qualitatif : {{COMPANY_NAME}} (Ticker : {{TICKER}})**
 
 **1. Valorisation :**
 *   Sur la base des commentaires d'analystes et des rapports récents, quels sont les principaux arguments qui suggèrent que l'action est **sous-évaluée** (le "bull case") et quels sont les principaux arguments qui suggèrent qu'elle est **surévaluée ou un piège à valeur** (le "bear case") ?
