@@ -42,7 +42,6 @@ function createStyledButton(id, title, svgIcon) {
   button.style.justifyContent = 'center';
   button.style.height = '40px';
   button.style.width = '40px';
-  button.style.marginLeft = '8px';
 
   return button;
 }
@@ -171,9 +170,10 @@ function addButtons() {
   });
   copyStatsButton.addEventListener('click', handleCopyStatsClick);
   
-  // Add buttons to the page (in reverse order because we use prepend)
-  buttonContainer.prepend(copyStatsButton);
-  buttonContainer.prepend(perplexityButton);
+  // Add buttons to the page. Due to flex-row-reverse on desktop,
+  // appending elements places them visually on the left.
+  buttonContainer.appendChild(perplexityButton);
+  buttonContainer.appendChild(copyStatsButton);
   console.log('[Perplexity Exporter] addButtons: All buttons successfully added.');
 }
 
