@@ -13,7 +13,7 @@ const BG_COLOR = '#f8f4f0';
 const PERPLEXITY_SVG_ICON = `<svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: auto;">
     <path xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" d="M101.008 42L190.99 124.905L190.99 124.886L190.99 42.1913H208.506L208.506 125.276L298.891 42V136.524L336 136.524V272.866H299.005V357.035L208.506 277.525L208.506 357.948H190.99L190.99 278.836L101.11 358V272.866H64V136.524H101.008V42ZM177.785 153.826H81.5159V255.564H101.088V223.472L177.785 153.826ZM118.625 231.149V319.392L190.99 255.655L190.99 165.421L118.625 231.149ZM209.01 254.812V165.336L281.396 231.068V272.866H281.489V318.491L209.01 254.812ZM299.005 255.564H318.484V153.826L222.932 153.826L299.005 222.751V255.564ZM281.375 136.524V81.7983L221.977 136.524L281.375 136.524ZM177.921 136.524H118.524V81.7983L177.921 136.524Z" fill="black"/>
 </svg>`;
-const CLIPBOARD_SVG_ICON = `<svg style="margin:auto; width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 3H8C5.23858 3 3 5.23858 3 8V16C3 18.7614 5.23858 21 8 21H16C18.7614 21 21 18.7614 21 16V8C21 5.23858 18.7614 3 16 3Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="${IDLE_COLOR}"/><path d="M16 8H13C12.448 8 12 7.55228 12 7V4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="${IDLE_COLOR}"/></svg>`;
+const CLIPBOARD_SVG_ICON = `<svg style="margin:auto; width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="8" width="13" height="13" rx="4" stroke="${IDLE_COLOR}" stroke-width="2"></rect><path fill-rule="evenodd" clip-rule="evenodd" d="M13 2.00004L12.8842 2.00002C12.0666 1.99982 11.5094 1.99968 11.0246 2.09611C9.92585 2.31466 8.95982 2.88816 8.25008 3.69274C7.90896 4.07944 7.62676 4.51983 7.41722 5.00004H9.76392C10.189 4.52493 10.7628 4.18736 11.4147 4.05768C11.6802 4.00488 12.0228 4.00004 13 4.00004H14.6C15.7366 4.00004 16.5289 4.00081 17.1458 4.05121C17.7509 4.10066 18.0986 4.19283 18.362 4.32702C18.9265 4.61464 19.3854 5.07358 19.673 5.63807C19.8072 5.90142 19.8994 6.24911 19.9488 6.85428C19.9992 7.47112 20 8.26343 20 9.40004V11C20 11.9773 19.9952 12.3199 19.9424 12.5853C19.8127 13.2373 19.4748 13.8114 19 14.2361V16.5829C20.4795 15.9374 21.5804 14.602 21.9039 12.9755C22.0004 12.4907 22.0002 11.9334 22 11.1158L22 11V9.40004V9.35725C22 8.27346 22 7.3993 21.9422 6.69141C21.8826 5.96256 21.7568 5.32238 21.455 4.73008C20.9757 3.78927 20.2108 3.02437 19.27 2.545C18.6777 2.24322 18.0375 2.1174 17.3086 2.05785C16.6007 2.00002 15.7266 2.00003 14.6428 2.00004L14.6 2.00004H13Z" fill="${IDLE_COLOR}"></path></svg>`;
 const CHECK_SVG_ICON = `<svg style="margin:auto; width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17L4 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="green"/></svg>`;
 
 
@@ -55,6 +55,18 @@ async function handleCopyStatsClick(event) {
   const button = event.currentTarget;
   console.log('[Perplexity Exporter] Copy Key Stats button clicked.');
 
+  // Extract company info from the header, same as the export button.
+  const header = document.querySelector('h1');
+  if (!header) {
+    console.error('[Perplexity Exporter] Could not find company header element.');
+    return;
+  }
+  const headerText = header.textContent.trim();
+  const match = headerText.match(/^(.*?)\s+\(([^)]+)\)$/);
+  const companyInfo = (match && match[1] && match[2])
+    ? { name: match[1].trim(), ticker: match[2].trim() }
+    : { name: headerText.split('(')[0].trim(), ticker: 'N/A' };
+
   // Find the grid of stats by looking for a known data-test attribute and finding its parent grid.
   const firstStatElement = document.querySelector('dd[data-test]');
   if (!firstStatElement) {
@@ -84,10 +96,13 @@ async function handleCopyStatsClick(event) {
   });
 
   if (stats.length > 0) {
+    const contentHeader = `[Investing.com Metrics]\n${companyInfo.name} (${companyInfo.ticker})`;
     const formattedStats = stats.join('\n');
+    const contentToCopy = `${contentHeader}\n\n${formattedStats}`;
+
     try {
-      await navigator.clipboard.writeText(formattedStats);
-      console.log(`[Perplexity Exporter] Copied ${stats.length} key stats to clipboard.`);
+      await navigator.clipboard.writeText(contentToCopy);
+      console.log(`[Perplexity Exporter] Copied header and ${stats.length} key stats to clipboard.`);
 
       // Provide visual feedback
       const originalTitle = button.title;
@@ -98,8 +113,8 @@ async function handleCopyStatsClick(event) {
       setTimeout(() => {
         button.innerHTML = CLIPBOARD_SVG_ICON;
         button.title = originalTitle;
-        const svgElements = button.querySelectorAll('path, rect');
-        svgElements.forEach(el => el.setAttribute('stroke', IDLE_COLOR));
+        button.querySelectorAll('[stroke]').forEach(el => el.setAttribute('stroke', IDLE_COLOR));
+        button.querySelectorAll('[fill]').forEach(el => el.setAttribute('fill', IDLE_COLOR));
         delete button.dataset.isCopied;
       }, 2000);
 
@@ -143,10 +158,16 @@ function addButtons() {
   // --- Create "Copy Key Stats" button ---
   const copyStatsButton = createStyledButton('copy-key-stats-btn', 'Copy Key Stats', CLIPBOARD_SVG_ICON);
   copyStatsButton.addEventListener('mouseover', () => {
-    if (!copyStatsButton.dataset.isCopied) copyStatsButton.querySelectorAll('path, rect').forEach(el => el.setAttribute('stroke', HOVER_COLOR));
+    if (!copyStatsButton.dataset.isCopied) {
+      copyStatsButton.querySelectorAll('[stroke]').forEach(el => el.setAttribute('stroke', HOVER_COLOR));
+      copyStatsButton.querySelectorAll('[fill]').forEach(el => el.setAttribute('fill', HOVER_COLOR));
+    }
   });
   copyStatsButton.addEventListener('mouseout', () => {
-    if (!copyStatsButton.dataset.isCopied) copyStatsButton.querySelectorAll('path, rect').forEach(el => el.setAttribute('stroke', IDLE_COLOR));
+    if (!copyStatsButton.dataset.isCopied) {
+      copyStatsButton.querySelectorAll('[stroke]').forEach(el => el.setAttribute('stroke', IDLE_COLOR));
+      copyStatsButton.querySelectorAll('[fill]').forEach(el => el.setAttribute('fill', IDLE_COLOR));
+    }
   });
   copyStatsButton.addEventListener('click', handleCopyStatsClick);
   
