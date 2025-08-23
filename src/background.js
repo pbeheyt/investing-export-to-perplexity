@@ -3,7 +3,7 @@
  * opens a new tab, and programmatically injects the necessary scripts
  * into the Perplexity page to perform the automation.
  */
-const PERPLEXITY_URL = "https://www.perplexity.ai/spaces/systeme-de-recherche-qualitati-ZNn4sgLpQPi9PElesXnlcw";
+const PERPLEXITY_URL = "https://www.perplexity.ai";
 
 // Create context menu items on extension installation
 chrome.runtime.onInstalled.addListener(() => {
@@ -17,7 +17,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('[Perplexity Exporter] Background: Message received', message);
   if (message.action === 'exportToPerplexity') {
-    const companyName = message.companyName;
+    const companyInfo = message.companyInfo;
 
     // This listener will handle the injection once the tab is ready.
     const tabUpdateListener = (tabId, changeInfo, tab) => {
@@ -48,9 +48,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Add the listener before creating the tab to catch the update event.
     chrome.tabs.onUpdated.addListener(tabUpdateListener);
 
-    // Save the company name to local storage for the content script to pick up.
-    chrome.storage.local.set({ companyToExport: companyName }, () => {
-      console.log(`[Perplexity Exporter] Background: Saved "${companyName}" to storage.`);
+    // Save the company info object to local storage for the content script to pick up.
+    chrome.storage.local.set({ companyToExport: companyInfo }, () => {
+      console.log(`[Perplexity Exporter] Background: Saved company info to storage:`, companyInfo);
       // Create a new tab with the Perplexity URL. The listener above will handle the rest.
       chrome.tabs.create({ url: PERPLEXITY_URL });
     });

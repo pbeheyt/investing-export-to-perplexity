@@ -32,6 +32,16 @@
       ]
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "prompts/srq_prompt.md"
+      ],
+      "matches": [
+        "*://*.perplexity.ai/*"
+      ]
+    }
+  ],
   "action": {
     "default_icon": {
       "16": "icons/logo.png",

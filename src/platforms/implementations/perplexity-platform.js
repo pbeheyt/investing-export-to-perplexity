@@ -75,13 +75,47 @@ class PerplexityPlatform extends BasePlatform {
   }
 
   /**
-   * Overridden automation process to include selecting "Research" mode.
-   * @param {string} companyName - The data to be entered.
+   * Fetches the prompt template, replaces placeholders, and returns the final text.
+   * @param {{name: string, ticker: string}} companyInfo - The company data.
+   * @returns {Promise<string|null>} The formatted prompt or null on error.
+   * @private
    */
-  async processAutomation(companyName) {
-    console.log(`[${this.platformId}] Starting automation for: ${companyName}`);
+  async _loadAndFormatPrompt(companyInfo) {
+    try {
+      const promptUrl = chrome.runtime.getURL('prompts/srq_prompt.md');
+      console.log(`[${this.platformId}] Fetching prompt from: ${promptUrl}`);
+      const response = await fetch(promptUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch prompt: ${response.statusText}`);
+      }
+      let promptText = await response.text();
 
-    // 1. Find the editor
+      // Replace placeholders
+      promptText = promptText.replace(/{{COMPANY_NAME}}/g, companyInfo.name);
+      promptText = promptText.replace(/{{TICKER}}/g, companyInfo.ticker || 'N/A');
+
+      return promptText;
+    } catch (error) {
+      console.error(`[${this.platformId}] Could not load or format the prompt:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Overridden automation process to include selecting "Research" mode.
+   * @param {{name: string, ticker: string}} companyInfo - The data to be entered.
+   */
+  async processAutomation(companyInfo) {
+    console.log(`[${this.platformId}] Starting automation for:`, companyInfo);
+
+    // 1. Load and format the prompt
+    const promptText = await this._loadAndFormatPrompt(companyInfo);
+    if (!promptText) {
+      console.error(`[${this.platformId}] Aborting automation due to prompt loading failure.`);
+      return;
+    }
+
+    // 2. Find the editor
     const editorResult = await this._waitForElementState(this._getEditorSelectors(), (el) => this._isVisibleElement(el), 10000);
     if (editorResult.status !== 'found') {
       console.error(`[${this.platformId}] Could not find the editor element. Aborting.`);
@@ -90,10 +124,10 @@ class PerplexityPlatform extends BasePlatform {
     const editor = editorResult.element;
     console.log(`[${this.platformId}] Editor found.`);
 
-    // 2. Insert the text
-    await this._insertTextIntoEditor(editor, companyName);
+    // 3. Insert the text
+    await this._insertTextIntoEditor(editor, promptText);
 
-    // 3. Find and select the "Research" mode button
+    // 4. Find and select the "Research" mode button
     const researchButtonResult = await this._waitForElementState(this._getResearchModeButtonSelector(), (el) => this._isVisibleElement(el), 5000);
     if (researchButtonResult.status === 'found') {
       const researchButton = researchButtonResult.element;
@@ -109,7 +143,7 @@ class PerplexityPlatform extends BasePlatform {
       console.warn(`[${this.platformId}] Could not find the "Research" mode button. Continuing without it.`);
     }
 
-    // 4. Find and wait for the submit button to become ready
+    // 5. Find and wait for the submit button to become ready
     const buttonResult = await this._waitForElementState(this._getSubmitButtonSelectors(), (el) => this._isButtonEnabled(el) && this._isVisibleElement(el), 5000);
     if (buttonResult.status !== 'found') {
       console.error(`[${this.platformId}] Submit button did not become enabled. Aborting.`);
@@ -118,10 +152,10 @@ class PerplexityPlatform extends BasePlatform {
     const submitButton = buttonResult.element;
     console.log(`[${this.platformId}] Submit button is ready.`);
 
-    // 5. Click the button
+    // 6. Click the button
     await this._clickSubmitButton(submitButton);
 
-    // 6. Verify submission
+    // 7. Verify submission
     await this._verifySubmission();
     
     console.log(`[${this.platformId}] Automation process complete.`);

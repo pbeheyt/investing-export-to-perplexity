@@ -58,12 +58,28 @@ function addButton() {
   
   // Add click listener to send data
   button.addEventListener('click', () => {
-    const companyName = header.textContent.split('(')[0].trim();
-    if (companyName) {
-      console.log(`[Perplexity Exporter] Exporting company: ${companyName}`);
+    const headerText = header.textContent.trim();
+    // Regex to capture "Company Name (TICKER)" format
+    const match = headerText.match(/^(.*?)\s+\(([^)]+)\)$/);
+    
+    if (match && match[1] && match[2]) {
+      const companyInfo = {
+        name: match[1].trim(),
+        ticker: match[2].trim()
+      };
+      console.log(`[Perplexity Exporter] Exporting company info:`, companyInfo);
       chrome.runtime.sendMessage({
         action: 'exportToPerplexity',
-        companyName: companyName
+        companyInfo: companyInfo
+      });
+    } else {
+      // Fallback for cases where the ticker might not be in parentheses
+      const companyName = headerText.split('(')[0].trim();
+      console.warn(`[Perplexity Exporter] Could not parse ticker. Falling back to name only: ${companyName}`);
+      const companyInfo = { name: companyName, ticker: '' }; // Send empty ticker
+      chrome.runtime.sendMessage({
+        action: 'exportToPerplexity',
+        companyInfo: companyInfo
       });
     }
   });
