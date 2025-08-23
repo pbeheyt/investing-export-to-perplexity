@@ -65,6 +65,27 @@ async function handleCopyStatsClick(event) {
   const companyInfo = (match && match[1] && match[2])
     ? { name: match[1].trim(), ticker: match[2].trim() }
     : { name: headerText.split('(')[0].trim(), ticker: 'N/A' };
+    
+  // --- New Logic: Scrape Industry and Sector ---
+  let industry = null;
+  let sector = null;
+
+  // Helper function to find a value by its label from the company profile section.
+  const findProfileValue = (label) => {
+    // Find all potential label divs. They have a specific class and are followed by a sibling.
+    const allLabelDivs = Array.from(document.querySelectorAll('div.pr-3'));
+    const labelDiv = allLabelDivs.find(div => div.textContent.trim() === label);
+    
+    if (labelDiv && labelDiv.nextElementSibling) {
+      return labelDiv.nextElementSibling.textContent.trim();
+    }
+    return null;
+  };
+
+  industry = findProfileValue('Industry');
+  sector = findProfileValue('Sector');
+  console.log(`[Perplexity Exporter] Scraped Profile -> Industry: ${industry}, Sector: ${sector}`);
+  // --- End New Logic ---
 
   // Find the grid of stats by looking for a known data-test attribute and finding its parent grid.
   const firstStatElement = document.querySelector('dd[data-test]');
@@ -95,7 +116,16 @@ async function handleCopyStatsClick(event) {
   });
 
   if (stats.length > 0) {
-    const contentHeader = `[Investing.com Metrics]\n${companyInfo.name} (${companyInfo.ticker})`;
+    // --- Updated Logic: Build the enhanced header ---
+    let contentHeader = `[Investing.com Metrics]\n${companyInfo.name} (${companyInfo.ticker})`;
+    if (industry) {
+      contentHeader += `\nIndustry: ${industry}`;
+    }
+    if (sector) {
+      contentHeader += `\nSector: ${sector}`;
+    }
+    // --- End Updated Logic ---
+
     const formattedStats = stats.join('\n');
     const contentToCopy = `${contentHeader}\n\n${formattedStats}`;
 
