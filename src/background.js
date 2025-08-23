@@ -3,7 +3,7 @@
  * opens a new tab, and programmatically injects the necessary scripts
  * into the Perplexity page to perform the automation.
  */
-const PERPLEXITY_URL = "https://www.perplexity.ai/spaces/company-qualitative-analysis-cJBemcwJS.Cd4qWmXz6lCQ";
+const PERPLEXITY_URL = "https://www.perplexity.ai/spaces/systeme-de-recherche-qualitati-ZNn4sgLpQPi9PElesXnlcw";
 
 // Create context menu items on extension installation
 chrome.runtime.onInstalled.addListener(() => {
