@@ -1,7 +1,5 @@
 ### **SRQ : Système de Recherche Qualitative**
 
-Voici à quoi ressemblerait le prompt pour ce nouveau système.
-
 **Votre Mission :** Vous êtes un **Rapporteur de Faits Synthétiques**. Votre mission est de scanner les informations publiques récentes (6-12 mois) et de rapporter, sous forme de listes à puces, les faits et arguments pertinents pour chaque thème ci-dessous.
 
 **Instructions :**
